@@ -1,26 +1,52 @@
-import React from 'react';
-import logo from './logo.svg';
+// dependencies
+import React, { useEffect, useState} from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import jwtDecode from 'jwt-decode';
+// components
+import { Content } from './content';
+// partials
+import { Nav } from './content/partials';
+// styling
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+export const App = () => {
 
-export default App;
+    let [user, setUser] = useState(null);
+
+    useEffect(() => {
+        decodeToken()
+    }, []);
+    // helper functions
+    const updateUser = newToken => {
+        if (newToken) {
+            localStorage.setItem('mernToken', newToken)
+            decodeToken(newToken)
+        } else {
+            setUser(null)
+        }
+    }
+
+    const decodeToken = existingToken => {
+        let token = existingToken || localStorage.getItem('mernToken');
+        if (token) {
+            let decoded = jwtDecode(token)
+            if (!decoded || Date.now() >= decoded.exp * 1000) {
+                console.log('expired!')
+                setUser(null);
+            } else {
+                setUser(decoded)
+            }
+        } else {
+            setUser(null)
+        }
+    };
+
+    return (
+        <Router>
+            <div className='app'>
+                <Nav user={user} updateUser={updateUser} />
+                <Content updateUser={updateUser} user={user} />
+            </div>
+        </Router>
+    )
+};
